@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<ruleset name="API-SALE-LIBRARY">
+    <description>Custom ruleset for API-SALE-LIBRARY</description>
+
+    <!-- Use PSR-12 as the base standard -->
+    <rule ref="PSR12"/>
+    <!-- Показывать прогресс -->
+    <arg value="p"/>
+    <!-- Exclude some files/folders if needed -->
+    <!-- <exclude-pattern>path/to/excluded/files</exclude-pattern> -->
+</ruleset>
