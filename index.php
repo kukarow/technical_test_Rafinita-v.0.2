@@ -4,10 +4,9 @@ use ApiSaleLibrary\Services\SaleService;
 
 require 'vendor/autoload.php';
 
-
 $data = '{ "action":"SALE",
-           "client_key":"5b6492f0-f8f5-11ea-976a-0242c0a85007",
-           "order_id":"ORDER32325608",
+           "client_key":"-f8f5-11ea-976a-0242c0a85007",
+           "order_id":"ORDER32325647",
            "order_amount":"1.99",
            "order_currency":"USD",
            "order_description":"Product",
@@ -34,5 +33,3 @@ $initService = new SaleService('d0ec0beca8a3c30652746925d5380cf3', '5b6492f0-f8f
 $initService->setEndpoint('https://dev-api.rafinita.com/post');
 $initService->setData($array);
 print_r($initService->send());
-
-
