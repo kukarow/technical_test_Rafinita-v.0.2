@@ -4,7 +4,7 @@
 
 ---
 
-Структура проєкта -
+**Структура проєкта -**
 ```bash
 /sale-api-client
     /src
@@ -18,7 +18,7 @@
     README.md
 
 ```
-Зміс `composer.json`
+**Зміст `composer.json`**
 ```json
 {  
   "name": "username/api-sale-library",  
@@ -54,15 +54,15 @@
 ---
 
 Зібраний тестовий варіант для тестування карток .
-даний варіант передбачає, що з боку клієнтської частини дані, що відправляються, пройшли всі необхідні тести - перевірки , а з боку серверної частини необхідно згенерувати новий `hash` для картки , в залежності від  `payer_email`- (в картці клієнта), `card_number` - (в картці клієнта) та приватно ключа .
+даний варіант передбачає, що з боку клієнтської частини дані, що відправляються, пройшли всі необхідні тести - перевірки , а з боку серверної частини необхідно згенерувати новий `hash` для картки , в залежності від  `payer_email`- (в картці клієнта), `card_number` - (в картці клієнта) та приватного ключа , також підміна `client_key` (в картці клієнта)
 
-В цьому варіанті дані заздалегідь були підготовленні , де параметр `client_key` - за здалегідь був замінений на вірний , **наголошую що це тількі в цьому варіанті **.
+**Зверніть увагу , в цьому варіанті - поля картки клієнта `hash` та `client_key`
+не додаються, а змінюються значення данних полей , так як вважаєтся що вони вже є.**  
 
 **Підготовленні дані мають таку форму :**
 ```json
   { "action":"SALE",  
-           "client_key":"5b6492f0-f8f5-11ea-976a-0242c0a85007",
-           "order_id":"ORDER32325608", 
+           "client_key":"-f8f5-11ea-976a-0242c0a85007",                    "order_id":"ORDER32325608", 
            "order_amount":"1.99",           
            "order_currency":"USD", 
            "order_description":"Product", 
@@ -79,14 +79,12 @@
 	       "payer_zip":"123456",  
            "payer_email":"kukarowwwww@gmail.com",
            "payer_phone":"199999999",
-           "payer_ip":"157.90.182.5", 
-           "term_url_3ds":"http://client.site.com/return.php", 
-            "hash":"52e01c3b41ec432c63bab4df6ea96687"
+           "payer_ip":"157.90.182.5", "term_url_3ds":"http://client.site.com/return.php",             "hash":"52e01c3b41ec432c63bab4df6ea96687"
     }';
 ```
 І**ніціалізація запиту на `SALE` -**
 
-1. Підготовка отриманих данних від клієнта
+1. Підготовка отриманих данних від клієнта 
  ```php
  //Данні клієнта (скорочено)
  $data = '{ "action":"SALE"......}';
@@ -114,7 +112,7 @@ $initService->send();
 ---
 
 
-Відповідь -
+**Відповідь -**
 ```php
 /bin/php /technical_test_(Rafinita)v.0.1/index.php
 ApiSaleLibrary\Services\ResponseService Object
@@ -140,11 +138,11 @@ ApiSaleLibrary\Services\ResponseService Object
 ---
 
 
-Генерація `hesh` має вигляд під капотом -
+**Генерація `hesh` має вигляд під капотом -**
 ```php
 protected function setHash(): string  
 {  
-  
+    //generate hash  
     $hashInput = strtoupper(  
         strrev($this->clientData['payer_email']) .  
         $this->passwordKey .  
@@ -154,19 +152,81 @@ protected function setHash(): string
     return md5($hashInput);  
 }
 ```
-
-Вигляд методу `send` для формування запиту(як приклад) -
+**Заміна `client_key`**
+```php
+protected function setClientKey(): string  
+{  
+    //functionality may be expanded  
+    return $this->publicKey;  
+}
+```
+**Вигляд методу `send` для формування запиту(як приклад) -**
 ```php
 public function send(): RafinitaResponseInterface  
 {  
     $this->clientData['hash'] = $this->setHash();  
+    $this->clientData['client_key'] = $this->setClientKey();  
     $headers = ['Content-Type' => 'application/x-www-form-urlencoded'];  
     $options = ['form_params' => $this->clientData];  
-  
+    try {  
         $client = new Client();  
         $request = new Request('POST', $this->apiEndpoint, $headers);  
         $res = $client->sendAsync($request, $options)->wait();  
   
-    return new ResponseService($res->getStatusCode(), json_decode((string)$res->getBody(), true));  
+        return new ResponseService($res->getStatusCode(), json_decode((string)$res->getBody(), true));  
+    } catch (ClientException $e) {  
+        return new ResponseService($e->getCode(), json_decode((string)$e->getResponse()->getBody(), true));  
+    }  
 }
 ```
+**Потенційний вигляд невдалої `SALE` операції, помилки (дублікат) -**
+```php
+/bin/php /technical_test_(Rafinita)v.0.1/index.php
+ApiSaleLibrary\Services\ResponseService Object
+(
+    [statusCode:protected] => 400
+    [body:protected] => Array
+        (
+            [result] => ERROR
+            [error_code] => 100000
+            [error_message] => Request data is invalid.
+            [errors] => Array
+                (
+                    [0] => Array
+                        (
+                            [error_code] => 100000
+                            [error_message] => order_id: Duplicate payment.
+                        )
+
+                )
+
+        )
+
+)
+```
+**Потенційний вигляд вдалої `SALE` операції-**
+```php
+/bin/php /technical_test_(Rafinita)v.0.1/index.php
+ApiSaleLibrary\Services\ResponseService Object
+(
+    [statusCode:protected] => 200
+    [body:protected] => Array
+        (
+            [action] => SALE
+            [result] => SUCCESS
+            [status] => SETTLED
+            [order_id] => ORDER32325647
+            [trans_id] => de5684ee-7a47-11ee-bf92-0242ac120005
+            [trans_date] => 2023-11-03 12:52:38
+            [descriptor] => Descriptor
+            [amount] => 1.99
+            [currency] => USD
+        )
+
+)
+```
+**Додаткові джерела -** 
+[https://docs.montypay.com/s2s_card#sale-request](https://docs.montypay.com/s2s_card#sale-request)
+
+[https://docs.montypay.com/s2s_apm#sale-request](https://docs.montypay.com/s2s_apm#sale-request)
+
