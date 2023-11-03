@@ -62,7 +62,8 @@
 **Підготовленні дані мають таку форму :**
 ```json
   { "action":"SALE",  
-           "client_key":"-f8f5-11ea-976a-0242c0a85007",                    "order_id":"ORDER32325608", 
+           "client_key":"-f8f5-11ea-976a-0242c0a85007",
+           "order_id":"ORDER32325608", 
            "order_amount":"1.99",           
            "order_currency":"USD", 
            "order_description":"Product", 
@@ -79,7 +80,9 @@
 	       "payer_zip":"123456",  
            "payer_email":"kukarowwwww@gmail.com",
            "payer_phone":"199999999",
-           "payer_ip":"157.90.182.5", "term_url_3ds":"http://client.site.com/return.php",             "hash":"52e01c3b41ec432c63bab4df6ea96687"
+           "payer_ip":"157.90.182.5",
+           "term_url_3ds":"http://client.site.com/return.php",
+           "hash":"52e01c3b41ec432c63bab4df6ea96687"
     }';
 ```
 І**ніціалізація запиту на `SALE` -**
